@@ -102,41 +102,18 @@ class LuxeStoreApp {
 
   // --- LUXURY 3D LOADING SCREEN CONTROLLER ---
   initLoadingScreen() {
+    // Handled exclusively by dedicated 3D WebGL engine in js/loader3d.js (window.luxury3DLoader)
+    if (window.luxury3DLoader) return;
+
+    // Fallback if script was not loaded
     const loader = document.getElementById("luxuryLoadingScreen");
-    const bar = document.getElementById("loaderProgressBar");
-    const percent = document.getElementById("loaderPercent");
-    const status = document.getElementById("loaderStatusText");
     if (!loader) return;
-
-    let progress = 0;
-    const stages = [
-      "Initializing 3D Spatial Canvas...",
-      "Calibrating Perspective Physics...",
-      "Preloading 3D TOONHUB Figurines...",
-      "Polishing Specular Materials...",
-      "Atelier Ready."
-    ];
-
-    const timer = setInterval(() => {
-      progress += Math.floor(Math.random() * 20) + 12;
-      if (progress > 100) progress = 100;
-
-      if (bar) bar.style.width = `${progress}%`;
-      if (percent) percent.textContent = `${progress}%`;
-
-      const stageIdx = Math.min(stages.length - 1, Math.floor((progress / 100) * stages.length));
-      if (status) status.textContent = stages[stageIdx];
-
-      if (progress >= 100) {
-        clearInterval(timer);
-        setTimeout(() => {
-          loader.classList.add("loader-fade-out");
-          setTimeout(() => {
-            loader.style.display = "none";
-          }, 600);
-        }, 300);
-      }
-    }, 70);
+    setTimeout(() => {
+      loader.classList.add("loader-fade-out");
+      setTimeout(() => {
+        loader.style.display = "none";
+      }, 600);
+    }, 1200);
   }
 
   // --- EVENT LISTENERS ---
