@@ -1,7 +1,7 @@
 /**
  * Main Application Logic
  * Orchestrates UI, catalog rendering, quick-view 3D modal, cart drawer,
- * search & filters, checkout flow, and order confirmation.
+ * search & filters, checkout flow, bulletproof order placement, and live order tracking.
  */
 
 class LuxeStoreApp {
@@ -16,12 +16,12 @@ class LuxeStoreApp {
     this.modalQuantity = 1;
 
     this.selectedPaymentMethod = "upi";
+    this.isSubmittingOrder = false;
 
     this.init();
   }
 
   init() {
-    // Wait for DOM
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", () => this.setup());
     } else {
@@ -76,7 +76,7 @@ class LuxeStoreApp {
     // Category tabs
     const categoryTabs = document.querySelectorAll(".category-tab-btn");
     categoryTabs.forEach(btn => {
-      btn.addEventListener("click", (e) => {
+      btn.addEventListener("click", () => {
         categoryTabs.forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         this.currentCategory = btn.dataset.category;
@@ -136,6 +136,15 @@ class LuxeStoreApp {
       });
     });
 
+    // Track Order triggers
+    const trackOrderBtns = document.querySelectorAll(".trigger-track-order-btn");
+    trackOrderBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        this.openTrackOrderModal();
+        window.soundFX?.playClick();
+      });
+    });
+
     // Cart Manager custom event listeners
     window.addEventListener("cart-updated", (e) => {
       this.updateCartUI(e.detail);
@@ -143,7 +152,7 @@ class LuxeStoreApp {
 
     window.addEventListener("wishlist-updated", () => {
       this.updateWishlistUI();
-      this.renderProducts(); // re-render hearts
+      this.renderProducts();
     });
 
     // Coupon code form submission
@@ -205,7 +214,7 @@ class LuxeStoreApp {
     if (proceedToCheckoutBtn) {
       proceedToCheckoutBtn.addEventListener("click", () => {
         if (window.cartManager.items.length === 0) {
-          this.showToast("Your cart is empty!", "error");
+          this.showToast("Your cart is empty! Add items first.", "error");
           return;
         }
         this.toggleCartDrawer(false);
@@ -214,12 +223,19 @@ class LuxeStoreApp {
       });
     }
 
-    // Checkout modal submission
+    // Checkout modal form submission & secondary button
     const checkoutForm = document.getElementById("checkoutForm");
     if (checkoutForm) {
       checkoutForm.addEventListener("submit", (e) => {
         e.preventDefault();
         this.processOrderPlacement();
+      });
+    }
+
+    const summaryCheckoutBtn = document.getElementById("summaryCheckoutBtn");
+    if (summaryCheckoutBtn) {
+      summaryCheckoutBtn.addEventListener("click", () => {
+        this.triggerCheckoutSubmit();
       });
     }
 
@@ -242,7 +258,7 @@ class LuxeStoreApp {
       }
     });
 
-    ["quickViewModal", "wishlistModal", "checkoutModal", "orderConfirmedModal"].forEach(id => {
+    ["quickViewModal", "wishlistModal", "checkoutModal", "orderConfirmedModal", "trackOrderModal"].forEach(id => {
       const dialog = document.getElementById(id);
       if (dialog) {
         dialog.addEventListener("click", (e) => {
@@ -415,15 +431,19 @@ class LuxeStoreApp {
                 <span class="save-tag">Save ${formatINR(savings)}</span>
               </div>
 
-              <!-- Action Buttons -->
+              <!-- 3-Button Action Suite: Quick View, Buy Now, Add to Cart -->
               <div class="card-actions-row">
-                <button class="btn-quick-view" onclick="window.luxeApp.openQuickViewModal('${product.id}')">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                <button class="btn-quick-view" title="Explore in 3D" onclick="window.luxeApp.openQuickViewModal('${product.id}')">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                   <span>Quick View</span>
                 </button>
-                <button class="btn-add-cart" onclick="window.luxeApp.handleQuickAddToCart('${product.id}', event)">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
-                  <span>Add to Cart</span>
+                <button class="btn-direct-buy" title="1-Click Express Checkout" onclick="window.luxeApp.handleDirectBuyNow('${product.id}', event)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span>Buy Now</span>
+                </button>
+                <button class="btn-add-cart" title="Add item to Bag" onclick="window.luxeApp.handleQuickAddToCart('${product.id}', event)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                  <span>+Bag</span>
                 </button>
               </div>
             </div>
@@ -431,6 +451,24 @@ class LuxeStoreApp {
         </article>
       `;
     }).join("");
+  }
+
+  // --- 1-CLICK DIRECT BUY NOW ---
+  handleDirectBuyNow(productId, event) {
+    if (event) event.stopPropagation();
+    const product = PRODUCTS_DATA.find(p => p.id === productId);
+    if (!product) return;
+
+    const defaultVariant = product.variants ? product.variants[0] : "Standard";
+    const defaultColor = product.colors ? product.colors[0].name : "Standard";
+
+    window.cartManager.addItem(product, defaultVariant, defaultColor, 1);
+    window.soundFX?.playAddCart();
+
+    this.closeModal("quickViewModal");
+    this.toggleCartDrawer(false);
+    this.openCheckoutModal();
+    this.showToast(`Selected "${product.name}" for instant checkout.`, "info");
   }
 
   // --- WISHLIST TOGGLE ---
@@ -461,7 +499,6 @@ class LuxeStoreApp {
     window.soundFX?.playAddCart();
     this.showToast(`Added "${product.name}" (${defaultVariant}) to Bag!`, "success");
 
-    // Animate cart badge
     this.animateCartBadge();
   }
 
@@ -561,7 +598,11 @@ class LuxeStoreApp {
       window.physics3D.attachTiltToElement(modalImageStage);
     }
 
-    modal.showModal();
+    try {
+      if (!modal.open) modal.showModal();
+    } catch (e) {
+      modal.show();
+    }
     window.soundFX?.playClick();
   }
 
@@ -747,8 +788,8 @@ class LuxeStoreApp {
           <div class="wishlist-price">${formatINR(p.price)}</div>
         </div>
         <div class="wishlist-actions">
-          <button class="btn-wishlist-cart" onclick="window.luxeApp.handleQuickAddToCart('${p.id}'); window.cartManager.toggleWishlist('${p.id}');">
-            Move to Cart
+          <button class="btn-wishlist-cart" onclick="window.luxeApp.handleDirectBuyNow('${p.id}');">
+            ⚡ Buy Now
           </button>
           <button class="btn-wishlist-remove" onclick="window.cartManager.toggleWishlist('${p.id}')">
             Remove
@@ -761,14 +802,20 @@ class LuxeStoreApp {
   openWishlistModal() {
     this.updateWishlistUI();
     const modal = document.getElementById("wishlistModal");
-    if (modal) modal.showModal();
+    if (modal) {
+      try {
+        if (!modal.open) modal.showModal();
+      } catch (e) {
+        modal.show();
+      }
+    }
   }
 
-  // --- CHECKOUT & PAYMENT ---
+  // --- CHECKOUT & BULLETPROOF PAYMENT ---
   openCheckoutModal() {
     const s = window.cartManager.getSummary();
     if (s.totalCount === 0) {
-      this.showToast("Your cart is empty!", "error");
+      this.showToast("Your cart is empty! Add an item before checking out.", "error");
       return;
     }
 
@@ -786,14 +833,40 @@ class LuxeStoreApp {
       `).join("");
     }
 
+    // Populate Pricing
     document.getElementById("checkoutSubtotal").textContent = formatINR(s.subtotal);
     document.getElementById("checkoutDiscount").textContent = s.discountAmount > 0 ? `-${formatINR(s.discountAmount)}` : "₹0";
     document.getElementById("checkoutShipping").textContent = s.isFreeShipping ? "FREE" : formatINR(s.shippingFee);
     document.getElementById("checkoutGst").textContent = `Included (${formatINR(s.gstComponent)})`;
     document.getElementById("checkoutGrandTotal").textContent = formatINR(s.grandTotal);
-    document.getElementById("checkoutSubmitBtnText").textContent = `Pay & Confirm Order (${formatINR(s.grandTotal)})`;
 
-    modal.showModal();
+    // Update Buttons with price safely
+    const btnText = document.getElementById("checkoutSubmitBtnText");
+    if (btnText) {
+      btnText.textContent = `Pay & Confirm Order (${formatINR(s.grandTotal)})`;
+    }
+    const summaryBtnText = document.getElementById("summaryCheckoutBtnText");
+    if (summaryBtnText) {
+      summaryBtnText.textContent = `Pay & Confirm Order (${formatINR(s.grandTotal)})`;
+    }
+
+    // Pre-populate input defaults if empty
+    const ensureInput = (id, fallback) => {
+      const el = document.getElementById(id);
+      if (el && !el.value.trim()) el.value = fallback;
+    };
+    ensureInput("custName", "Shiva Sharma");
+    ensureInput("custPhone", "9876543210");
+    ensureInput("custEmail", "shiva@luxuryatelier.com");
+    ensureInput("custAddress", "Penthouse 42, Skyline Towers");
+    ensureInput("custCity", "Mumbai, Maharashtra");
+    ensureInput("custPincode", "400001");
+
+    try {
+      if (!modal.open) modal.showModal();
+    } catch (e) {
+      modal.show();
+    }
   }
 
   updatePaymentDetailsView(method) {
@@ -806,62 +879,123 @@ class LuxeStoreApp {
     if (codBox) codBox.classList.toggle("hidden", method !== "cod");
   }
 
+  triggerCheckoutSubmit() {
+    const form = document.getElementById("checkoutForm");
+    if (form) {
+      // Trigger submit
+      if (typeof form.requestSubmit === "function") {
+        form.requestSubmit();
+      } else {
+        this.processOrderPlacement();
+      }
+    } else {
+      this.processOrderPlacement();
+    }
+  }
+
   processOrderPlacement() {
-    const fullName = document.getElementById("custName")?.value || "Guest Collector";
-    const phone = document.getElementById("custPhone")?.value || "+91 98765 43210";
-    const address = document.getElementById("custAddress")?.value || "Penthouse 42, Skyline Towers";
-    const city = document.getElementById("custCity")?.value || "Mumbai";
-    const pincode = document.getElementById("custPincode")?.value || "400001";
+    if (this.isSubmittingOrder) return;
 
     const s = window.cartManager.getSummary();
-    const orderedItems = [...s.items];
+    if (s.totalCount === 0) {
+      this.showToast("Your cart is empty!", "error");
+      return;
+    }
+
+    const fullNameInput = document.getElementById("custName");
+    const phoneInput = document.getElementById("custPhone");
+    const addressInput = document.getElementById("custAddress");
+    const cityInput = document.getElementById("custCity");
+    const pincodeInput = document.getElementById("custPincode");
+
+    const fullName = (fullNameInput?.value || "").trim() || "Guest Collector";
+    const phone = (phoneInput?.value || "").trim() || "+91 98765 43210";
+    const address = (addressInput?.value || "").trim() || "Penthouse 42, Skyline Towers";
+    const city = (cityInput?.value || "").trim() || "Mumbai, Maharashtra";
+    const pincode = (pincodeInput?.value || "").trim() || "400001";
+
+    // Quick required field check
+    if (!fullName || !phone || !address) {
+      this.showToast("Please enter your name, phone number, and address.", "error");
+      return;
+    }
+
+    this.isSubmittingOrder = true;
+
+    // Snapshot order details before clearing
+    const orderedItems = JSON.parse(JSON.stringify(s.items));
     const finalAmount = s.grandTotal;
 
     // Generate unique Tracking ID: e.g. #TRK-98421
     const randomTrackNum = Math.floor(10000 + Math.random() * 90000);
     const trackingId = `#TRK-${randomTrackNum}`;
 
+    const orderRecord = {
+      trackingId,
+      customerName: fullName,
+      phone,
+      address: `${address}, ${city} - ${pincode}`,
+      items: orderedItems,
+      total: finalAmount,
+      subtotal: s.subtotal,
+      discount: s.discountAmount,
+      shipping: s.shippingFee,
+      paymentMethod: this.selectedPaymentMethod.toUpperCase(),
+      timestamp: new Date().toISOString(),
+      status: "Confirmed"
+    };
+
+    // Save order in LocalStorage history
+    window.cartManager.saveOrder(orderRecord);
+
     // Show button loading state
     const submitBtn = document.getElementById("checkoutSubmitBtn");
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = `
+    const summaryBtn = document.getElementById("summaryCheckoutBtn");
+    const originalText = `Pay & Confirm Order (${formatINR(finalAmount)})`;
+
+    const setBtnLoading = (btn) => {
+      if (!btn) return;
+      btn.disabled = true;
+      btn.innerHTML = `
         <div class="spinner-small"></div>
         <span>Securing Luxury Order...</span>
       `;
-    }
+    };
 
+    setBtnLoading(submitBtn);
+    setBtnLoading(summaryBtn);
+
+    // Simulated payment processing delay
     setTimeout(() => {
-      // Clear Cart
+      // Clear Cart state
       window.cartManager.clearCart();
 
       // Close Checkout Modal
       this.closeModal("checkoutModal");
 
-      // Reset Submit Button
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `<span>Pay & Confirm Order</span>`;
-      }
+      // Reset Submit Buttons
+      const resetBtn = (btn, textId) => {
+        if (!btn) return;
+        btn.disabled = false;
+        btn.innerHTML = `<span id="${textId}">${originalText}</span>`;
+      };
+      resetBtn(submitBtn, "checkoutSubmitBtnText");
+      resetBtn(summaryBtn, "summaryCheckoutBtnText");
+
+      this.isSubmittingOrder = false;
 
       // Open Order Confirmed Modal
-      this.openOrderConfirmation({
-        trackingId,
-        customerName: fullName,
-        phone,
-        address: `${address}, ${city} - ${pincode}`,
-        items: orderedItems,
-        total: finalAmount,
-        paymentMethod: this.selectedPaymentMethod.toUpperCase()
-      });
-
+      this.openOrderConfirmation(orderRecord);
       window.soundFX?.playSuccess();
-    }, 1200);
+      this.showToast(`Order Confirmed! Your tracking ID is ${trackingId}`, "success");
+    }, 1100);
   }
 
   openOrderConfirmation(orderData) {
     const modal = document.getElementById("orderConfirmedModal");
     if (!modal) return;
+
+    this.activeConfirmedOrder = orderData;
 
     document.getElementById("confirmTrackingId").textContent = orderData.trackingId;
     document.getElementById("confirmCustomerName").textContent = orderData.customerName;
@@ -877,7 +1011,7 @@ class LuxeStoreApp {
 
     // List ordered items
     const itemsContainer = document.getElementById("confirmOrderItems");
-    if (itemsContainer) {
+    if (itemsContainer && orderData.items) {
       itemsContainer.innerHTML = orderData.items.map(item => `
         <div class="confirm-item-row">
           <img src="${item.image}" alt="${item.name}" class="confirm-thumb">
@@ -890,34 +1024,127 @@ class LuxeStoreApp {
       `).join("");
     }
 
-    modal.showModal();
+    try {
+      if (!modal.open) modal.showModal();
+    } catch (e) {
+      modal.show();
+    }
 
     // Trigger celebratory confetti effect
-    this.launchConfetti();
+    setTimeout(() => {
+      this.launchConfetti();
+    }, 100);
   }
 
+  // --- COPY TRACKING ID TO CLIPBOARD ---
+  copyTrackingId() {
+    const trackingId = document.getElementById("confirmTrackingId")?.textContent || "#TRK-98421";
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(trackingId).then(() => {
+        window.soundFX?.playClick();
+        this.showToast(`Tracking ID ${trackingId} copied to clipboard!`, "success");
+      });
+    } else {
+      this.showToast(`Tracking ID: ${trackingId}`, "info");
+    }
+  }
+
+  // --- PRINT / SAVE RECEIPT ---
+  printReceipt() {
+    window.soundFX?.playClick();
+    window.print();
+  }
+
+  // --- LIVE ORDER TRACKING MODAL ---
+  openTrackOrderModal(prefillId = "") {
+    const modal = document.getElementById("trackOrderModal");
+    if (!modal) return;
+
+    const input = document.getElementById("trackOrderSearchInput");
+    if (input) {
+      if (prefillId) {
+        input.value = prefillId;
+      } else {
+        const last = window.cartManager.getLastOrder();
+        if (last && last.trackingId) {
+          input.value = last.trackingId;
+        }
+      }
+    }
+
+    try {
+      if (!modal.open) modal.showModal();
+    } catch (e) {
+      modal.show();
+    }
+
+    if (input && input.value) {
+      this.lookupOrderTracking(input.value);
+    }
+  }
+
+  lookupOrderTracking(queryId) {
+    const resBox = document.getElementById("trackOrderResultBox");
+    const emptyBox = document.getElementById("trackOrderNotFoundBox");
+    if (!resBox || !emptyBox) return;
+
+    const order = window.cartManager.getOrderByTrackingId(queryId);
+
+    if (!order) {
+      resBox.classList.add("hidden");
+      emptyBox.classList.remove("hidden");
+      document.getElementById("searchedTrackId").textContent = queryId || "entered ID";
+      return;
+    }
+
+    emptyBox.classList.add("hidden");
+    resBox.classList.remove("hidden");
+
+    document.getElementById("trackResultId").textContent = order.trackingId;
+    document.getElementById("trackResultName").textContent = order.customerName;
+    document.getElementById("trackResultAddress").textContent = order.address;
+    document.getElementById("trackResultTotal").textContent = formatINR(order.total);
+    document.getElementById("trackResultPayment").textContent = order.paymentMethod;
+
+    const itemsBox = document.getElementById("trackResultItems");
+    if (itemsBox && order.items) {
+      itemsBox.innerHTML = order.items.map(it => `
+        <div class="confirm-item-row">
+          <img src="${it.image}" alt="${it.name}" class="confirm-thumb">
+          <div>
+            <div class="confirm-item-title">${it.name}</div>
+            <div class="confirm-item-meta">${it.quantity}x • ${it.variant}</div>
+          </div>
+          <div class="confirm-item-price">${formatINR(it.price * it.quantity)}</div>
+        </div>
+      `).join("");
+    }
+  }
+
+  // --- CONFETTI CELEBRATION EFFECT ---
   launchConfetti() {
     const canvas = document.getElementById("confettiCanvas");
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
+    const container = canvas.parentElement;
+    canvas.width = container.clientWidth || 540;
+    canvas.height = container.clientHeight || 500;
 
     const particles = [];
     const colors = ["#F59E0B", "#6366F1", "#10B981", "#EC4899", "#3B82F6"];
 
-    for (let i = 0; i < 80; i++) {
+    for (let i = 0; i < 90; i++) {
       particles.push({
         x: canvas.width / 2,
-        y: canvas.height / 2,
-        vx: (Math.random() - 0.5) * 14,
-        vy: (Math.random() - 0.7) * 14,
-        size: Math.random() * 6 + 3,
+        y: canvas.height * 0.4,
+        vx: (Math.random() - 0.5) * 16,
+        vy: (Math.random() - 0.75) * 16,
+        size: Math.random() * 7 + 3,
         color: colors[Math.floor(Math.random() * colors.length)],
         rotation: Math.random() * 360,
-        rSpeed: (Math.random() - 0.5) * 8,
-        gravity: 0.25,
+        rSpeed: (Math.random() - 0.5) * 10,
+        gravity: 0.28,
         opacity: 1
       });
     }
@@ -932,7 +1159,7 @@ class LuxeStoreApp {
         p.y += p.vy;
         p.vy += p.gravity;
         p.rotation += p.rSpeed;
-        p.opacity -= 0.012;
+        p.opacity -= 0.014;
 
         if (p.opacity > 0) {
           alive = true;
@@ -963,12 +1190,11 @@ class LuxeStoreApp {
     const secsEl = document.getElementById("countdownSecs");
     if (!hoursEl || !minsEl || !secsEl) return;
 
-    // Set end target 14 hours 45 minutes from now
     let remainingSeconds = 14 * 3600 + 45 * 60 + 28;
 
     const tick = () => {
       if (remainingSeconds <= 0) {
-        remainingSeconds = 24 * 3600; // Reset cycle
+        remainingSeconds = 24 * 3600;
       }
       remainingSeconds--;
 
@@ -1019,7 +1245,7 @@ class LuxeStoreApp {
     const badges = document.querySelectorAll(".cart-count-badge");
     badges.forEach(b => {
       b.classList.remove("bump");
-      void b.offsetWidth; // Force reflow
+      void b.offsetWidth;
       b.classList.add("bump");
     });
   }
@@ -1035,13 +1261,13 @@ class LuxeStoreApp {
 
   closeModal(modalId) {
     const m = document.getElementById(modalId);
-    if (m && typeof m.close === "function") {
+    if (m && typeof m.close === "function" && m.open) {
       m.close();
     }
   }
 
   closeAllModals() {
-    ["quickViewModal", "wishlistModal", "checkoutModal", "orderConfirmedModal"].forEach(id => {
+    ["quickViewModal", "wishlistModal", "checkoutModal", "orderConfirmedModal", "trackOrderModal"].forEach(id => {
       this.closeModal(id);
     });
     this.toggleCartDrawer(false);

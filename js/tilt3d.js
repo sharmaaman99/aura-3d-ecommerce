@@ -1,7 +1,8 @@
 /**
  * 3D Physics & Parallax Engine
  * - Interactive 3D mouse tilt with dynamic specular glare
- * - Split-screen Hero 3D showcase with orbital neon depth rings
+ * - Split-screen Hero 3D showcase with orbital neon depth rings & interactive card switching
+ * - Interactive 3D Credit Card with 360° flip & live data mirroring
  * - Smooth lerped physics for 60fps performance
  */
 
@@ -10,6 +11,7 @@ class Physics3DEngine {
     this.mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
     this.heroContainer = null;
     this.heroShowcase = null;
+    this.activeHeroCardIndex = 1; // Center card default
     this.init();
   }
 
@@ -29,6 +31,7 @@ class Physics3DEngine {
     this.bindWindowMouse();
     this.initHero3DShowcase();
     this.initCardTiltPhysics();
+    this.init3DCreditCard();
     this.startRenderLoop();
   }
 
@@ -59,21 +62,14 @@ class Physics3DEngine {
   initHero3DShowcase() {
     if (!this.heroShowcase) return;
 
-    // Additional interactive tilt on the hero showcase area directly
-    this.heroShowcase.addEventListener("mousemove", (e) => {
-      const rect = this.heroShowcase.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-
-      this.heroMouseX = (x - centerX) / centerX;
-      this.heroMouseY = (y - centerY) / centerY;
-    });
-
-    this.heroShowcase.addEventListener("mouseleave", () => {
-      this.heroMouseX = 0;
-      this.heroMouseY = 0;
+    // Interactive Hero Card Switching
+    const heroCards = this.heroShowcase.querySelectorAll(".hero-floating-card");
+    heroCards.forEach((card, idx) => {
+      card.addEventListener("mouseenter", () => {
+        heroCards.forEach(c => c.classList.remove("active-focus"));
+        card.classList.add("active-focus");
+        this.activeHeroCardIndex = idx;
+      });
     });
   }
 
@@ -101,13 +97,17 @@ class Physics3DEngine {
 
         // Parallax floating hero cards
         const heroCards = this.heroShowcase.querySelectorAll(".hero-floating-card");
-        heroCards.forEach(card => {
+        heroCards.forEach((card, idx) => {
           const depth = parseFloat(card.dataset.depth || "30");
           const cardX = this.mouse.x * (depth * 0.6);
           const cardY = this.mouse.y * (depth * 0.6);
           const baseZ = card.dataset.baseZ || "40px";
           const cardRot = parseFloat(card.dataset.baseRot || "0");
-          card.style.transform = `translate3d(${cardX}px, ${cardY}px, ${baseZ}) rotateZ(${cardRot}deg)`;
+
+          // Extra pop if hovered
+          const isFocused = card.classList.contains("active-focus");
+          const finalZ = isFocused ? "85px" : baseZ;
+          card.style.transform = `translate3d(${cardX}px, ${cardY}px, ${finalZ}) rotateZ(${cardRot}deg) scale(${isFocused ? 1.05 : 1})`;
         });
 
         // Parallax floating badges
@@ -128,11 +128,10 @@ class Physics3DEngine {
 
   // --- 3D PERSPECTIVE PRODUCT CARDS TILT & SPECULAR GLARE ---
   initCardTiltPhysics() {
-    // Event delegation on product grid for both existing and newly rendered cards
     const productGrid = document.getElementById("productGrid");
     if (!productGrid) return;
 
-    // Mousemove tilt handler
+    // Mousemove tilt handler with real-time specular glare
     productGrid.addEventListener("mousemove", (e) => {
       const card = e.target.closest(".product-card-3d");
       if (!card) return;
@@ -169,7 +168,6 @@ class Physics3DEngine {
       const card = e.target.closest(".product-card-3d");
       if (!card) return;
 
-      // Only reset if actually leaving the card boundary
       const related = e.relatedTarget;
       if (related && card.contains(related)) return;
 
@@ -183,6 +181,95 @@ class Physics3DEngine {
         glare.style.background = `radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0) 100%)`;
       }
     });
+  }
+
+  // --- INTERACTIVE 3D CREDIT CARD IN CHECKOUT ---
+  init3DCreditCard() {
+    const cardEl = document.getElementById("interactiveCreditCard3D");
+    const numInput = document.getElementById("cardNumInput");
+    const nameInput = document.getElementById("cardHolderInput");
+    const expInput = document.getElementById("cardExpInput");
+    const cvvInput = document.getElementById("cardCvvInput");
+
+    if (!cardEl) return;
+
+    // Mouse tilt on the card itself
+    cardEl.addEventListener("mousemove", (e) => {
+      if (cardEl.classList.contains("is-flipped")) return; // Don't disrupt flip
+      const rect = cardEl.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const rotX = ((y - rect.height / 2) / (rect.height / 2)) * -14;
+      const rotY = ((x - rect.width / 2) / (rect.width / 2)) * 14;
+
+      cardEl.style.transform = `perspective(1000px) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg)`;
+    });
+
+    cardEl.addEventListener("mouseleave", () => {
+      if (!cardEl.classList.contains("is-flipped")) {
+        cardEl.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg)`;
+      }
+    });
+
+    // Live Card Number Formatting & Mirroring
+    if (numInput) {
+      numInput.addEventListener("input", (e) => {
+        let val = e.target.value.replace(/\D/g, '').substring(0, 16);
+        val = val.replace(/(.{4})/g, '$1 ').trim();
+        e.target.value = val;
+
+        const display = document.getElementById("cardDisplayNum");
+        if (display) {
+          display.textContent = val || "•••• •••• •••• ••••";
+        }
+      });
+    }
+
+    // Live Cardholder Name Mirroring
+    if (nameInput) {
+      nameInput.addEventListener("input", (e) => {
+        const display = document.getElementById("cardDisplayName");
+        if (display) {
+          display.textContent = (e.target.value.trim().toUpperCase()) || "YOUR NAME";
+        }
+      });
+    }
+
+    // Live Expiry Date Mirroring
+    if (expInput) {
+      expInput.addEventListener("input", (e) => {
+        let val = e.target.value.replace(/\D/g, '').substring(0, 4);
+        if (val.length >= 3) {
+          val = val.substring(0, 2) + '/' + val.substring(2);
+        }
+        e.target.value = val;
+
+        const display = document.getElementById("cardDisplayExp");
+        if (display) {
+          display.textContent = val || "MM/YY";
+        }
+      });
+    }
+
+    // 3D Flip on CVV Focus / Blur
+    if (cvvInput) {
+      cvvInput.addEventListener("focus", () => {
+        cardEl.classList.add("is-flipped");
+        cardEl.style.transform = `perspective(1000px) rotateY(180deg)`;
+      });
+
+      cvvInput.addEventListener("blur", () => {
+        cardEl.classList.remove("is-flipped");
+        cardEl.style.transform = `perspective(1000px) rotateY(0deg)`;
+      });
+
+      cvvInput.addEventListener("input", (e) => {
+        const display = document.getElementById("cardDisplayCvv");
+        if (display) {
+          display.textContent = e.target.value.substring(0, 4) || "•••";
+        }
+      });
+    }
   }
 
   // Helper method to attach tilt to arbitrary elements (e.g., in modal)

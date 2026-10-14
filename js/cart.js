@@ -246,6 +246,40 @@ class CartManager {
       items: this.items
     };
   }
+
+  // --- ORDER HISTORY PERSISTENCE ---
+  saveOrder(orderData) {
+    try {
+      const orders = this.getOrderHistory();
+      orders.unshift(orderData); // Add latest order to beginning
+      localStorage.setItem("luxe_orders_history", JSON.stringify(orders));
+      return true;
+    } catch (e) {
+      console.error("Failed to persist order:", e);
+      return false;
+    }
+  }
+
+  getOrderHistory() {
+    try {
+      const data = localStorage.getItem("luxe_orders_history");
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  getOrderByTrackingId(trackingId) {
+    if (!trackingId) return null;
+    const cleanId = trackingId.trim().toUpperCase();
+    const orders = this.getOrderHistory();
+    return orders.find(o => o.trackingId && o.trackingId.toUpperCase() === cleanId) || null;
+  }
+
+  getLastOrder() {
+    const orders = this.getOrderHistory();
+    return orders.length > 0 ? orders[0] : null;
+  }
 }
 
 // Global singleton instance
