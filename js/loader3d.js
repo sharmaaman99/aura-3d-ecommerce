@@ -1,8 +1,8 @@
 /**
- * ULTRA-MODERN 3D LUXURY SPATIAL LOADING SCREEN ENGINE
- * High-performance WebGL 3D Gyroscope with faceted gold icosahedron core,
- * dual concentric orbital rings, stardust particle swarm, and real-time cursor tilt physics.
- * Includes a pure mathematical 3D perspective Canvas fallback if WebGL is unavailable.
+ * ULTRA-MODERN FULL-SCREEN 3D LUXURY SPATIAL LOADING SCREEN ENGINE
+ * Full-viewport WebGL 3D Gyroscope with faceted gold icosahedron core,
+ * 3 concentric multi-axis orbital rings, 450 cosmic stardust particles,
+ * real-time cursor tilt physics, and dramatic cinematic camera zoom-out exit animation.
  */
 
 class Luxury3DLoader {
@@ -25,6 +25,7 @@ class Luxury3DLoader {
     this.coreGroup = null;
     this.gemMesh = null;
     this.wireframeMesh = null;
+    this.innerMesh = null;
     this.ring1 = null;
     this.ring2 = null;
     this.ring3 = null;
@@ -36,7 +37,8 @@ class Luxury3DLoader {
     // Interaction & Tilt Physics
     this.mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
     this.rotationSpeed = { x: 0.012, y: 0.018, z: 0.008 };
-    this.isWarping = false;
+    this.isZoomingOut = false;
+    this.targetCameraZ = 95;
 
     // Telemetry Stages
     this.stages = [
@@ -53,7 +55,7 @@ class Luxury3DLoader {
   init() {
     if (!this.overlay) return;
 
-    // Setup 3D Scene (Three.js WebGL or Canvas Fallback)
+    // Setup Full-Screen 3D Scene (Three.js WebGL or Canvas Fallback)
     if (this.canvas && window.THREE && this.checkWebGL()) {
       this.initThreeJS();
     } else if (this.canvas) {
@@ -73,18 +75,19 @@ class Luxury3DLoader {
     }
   }
 
-  // --- THREE.JS WEBGL 3D IMPLEMENTATION ---
+  // --- THREE.JS WEBGL FULL-SCREEN 3D IMPLEMENTATION ---
   initThreeJS() {
     const THREE = window.THREE;
-    const width = 280;
-    const height = 280;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
 
     // Scene & Camera
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    this.camera.position.z = 85;
+    this.camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+    this.camera.position.z = 95;
+    this.targetCameraZ = 95;
 
-    // Renderer
+    // Renderer (Full Screen)
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
       alpha: true,
@@ -99,20 +102,20 @@ class Luxury3DLoader {
     this.scene.add(this.coreGroup);
 
     // 1. Central Faceted Icosahedron Gem (Royal Gold)
-    const gemGeo = new THREE.IcosahedronGeometry(16, 0);
+    const gemGeo = new THREE.IcosahedronGeometry(22, 0);
     const gemMat = new THREE.MeshStandardMaterial({
       color: 0xF59E0B,
-      metalness: 0.9,
+      metalness: 0.92,
       roughness: 0.15,
       emissive: 0x78350F,
-      emissiveIntensity: 0.35,
+      emissiveIntensity: 0.4,
       flatShading: true
     });
     this.gemMesh = new THREE.Mesh(gemGeo, gemMat);
     this.coreGroup.add(this.gemMesh);
 
     // 2. Outer Luminous Wireframe Shell (Electric Indigo)
-    const wireGeo = new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(16.3, 0));
+    const wireGeo = new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(22.4, 0));
     const wireMat = new THREE.LineBasicMaterial({
       color: 0x818CF8,
       transparent: true,
@@ -122,51 +125,51 @@ class Luxury3DLoader {
     this.wireframeMesh = new THREE.LineSegments(wireGeo, wireMat);
     this.coreGroup.add(this.wireframeMesh);
 
-    // 3. Inner Quantum Core (Electric Cyan Pulsar)
-    const innerGeo = new THREE.OctahedronGeometry(7, 0);
+    // 3. Inner Quantum Pulsar (Electric Cyan)
+    const innerGeo = new THREE.OctahedronGeometry(10, 0);
     const innerMat = new THREE.MeshBasicMaterial({
       color: 0x38BDF8,
       wireframe: true,
       transparent: true,
-      opacity: 0.8
+      opacity: 0.85
     });
     this.innerMesh = new THREE.Mesh(innerGeo, innerMat);
     this.coreGroup.add(this.innerMesh);
 
     // 4. Primary Orbital Gyro Ring (Royal Gold)
-    const ring1Geo = new THREE.TorusGeometry(26, 0.75, 16, 80);
+    const ring1Geo = new THREE.TorusGeometry(38, 1.1, 16, 90);
     const ring1Mat = new THREE.MeshStandardMaterial({
       color: 0xF59E0B,
       metalness: 0.95,
-      roughness: 0.2,
+      roughness: 0.18,
       emissive: 0xD97706,
-      emissiveIntensity: 0.4
+      emissiveIntensity: 0.45
     });
     this.ring1 = new THREE.Mesh(ring1Geo, ring1Mat);
     this.coreGroup.add(this.ring1);
 
-    // 5. Secondary Orbital Gyro Ring (Electric Indigo, 55° inclined)
-    const ring2Geo = new THREE.TorusGeometry(33, 0.65, 16, 80);
+    // 5. Secondary Orbital Gyro Ring (Electric Indigo, 50° inclined)
+    const ring2Geo = new THREE.TorusGeometry(49, 0.9, 16, 90);
     const ring2Mat = new THREE.MeshStandardMaterial({
       color: 0x6366F1,
-      metalness: 0.9,
-      roughness: 0.25,
+      metalness: 0.92,
+      roughness: 0.22,
       emissive: 0x4338CA,
       emissiveIntensity: 0.5
     });
     this.ring2 = new THREE.Mesh(ring2Geo, ring2Mat);
-    this.ring2.rotation.x = Math.PI / 3;
+    this.ring2.rotation.x = Math.PI / 3.2;
     this.ring2.rotation.y = Math.PI / 4;
     this.coreGroup.add(this.ring2);
 
     // 6. Tertiary Equatorial Ring (Spatial Emerald/Cyan)
-    const ring3Geo = new THREE.TorusGeometry(40, 0.5, 16, 90);
+    const ring3Geo = new THREE.TorusGeometry(60, 0.75, 16, 100);
     const ring3Mat = new THREE.MeshStandardMaterial({
       color: 0x10B981,
-      metalness: 0.85,
-      roughness: 0.3,
+      metalness: 0.88,
+      roughness: 0.28,
       emissive: 0x059669,
-      emissiveIntensity: 0.3
+      emissiveIntensity: 0.35
     });
     this.ring3 = new THREE.Mesh(ring3Geo, ring3Mat);
     this.ring3.rotation.x = Math.PI / 2;
@@ -174,20 +177,20 @@ class Luxury3DLoader {
 
     // 7. Orbiting Satellite Nodes
     const createSatellite = (radius, color, ring) => {
-      const satGeo = new THREE.SphereGeometry(1.4, 16, 16);
+      const satGeo = new THREE.SphereGeometry(2.0, 16, 16);
       const satMat = new THREE.MeshBasicMaterial({ color: color });
       const satMesh = new THREE.Mesh(satGeo, satMat);
       ring.add(satMesh);
       satMesh.position.x = radius;
-      return { mesh: satMesh, ring: ring, angle: 0, speed: 0.04, radius: radius };
+      return { mesh: satMesh, ring: ring, angle: 0, speed: 0.035, radius: radius };
     };
 
-    this.satellites.push(createSatellite(26, 0xFDE047, this.ring1));
-    this.satellites.push(createSatellite(33, 0xA5B4FC, this.ring2));
-    this.satellites.push(createSatellite(40, 0x6EE7B7, this.ring3));
+    this.satellites.push(createSatellite(38, 0xFDE047, this.ring1));
+    this.satellites.push(createSatellite(49, 0xA5B4FC, this.ring2));
+    this.satellites.push(createSatellite(60, 0x6EE7B7, this.ring3));
 
-    // 8. Cosmic Swarm Particle Field (180 glittering micro-stars)
-    const partCount = 180;
+    // 8. Full-Viewport Cosmic Stardust Particles (450 glittering micro-stars)
+    const partCount = 450;
     const partPositions = new Float32Array(partCount * 3);
     const partColors = new Float32Array(partCount * 3);
 
@@ -196,7 +199,7 @@ class Luxury3DLoader {
     const cyanColor = new THREE.Color(0x38BDF8);
 
     for (let i = 0; i < partCount; i++) {
-      const radius = 22 + Math.random() * 45;
+      const radius = 30 + Math.random() * 120;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos((Math.random() * 2) - 1);
 
@@ -215,25 +218,25 @@ class Luxury3DLoader {
     partGeo.setAttribute("color", new THREE.BufferAttribute(partColors, 3));
 
     const partMat = new THREE.PointsMaterial({
-      size: 1.6,
+      size: 2.2,
       vertexColors: true,
       transparent: true,
-      opacity: 0.85
+      opacity: 0.9
     });
 
     this.particles = new THREE.Points(partGeo, partMat);
     this.scene.add(this.particles);
 
     // 9. Dynamic 3D Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
     this.scene.add(ambientLight);
 
-    this.light1 = new THREE.PointLight(0xF59E0B, 3.2, 120);
-    this.light1.position.set(30, 30, 40);
+    this.light1 = new THREE.PointLight(0xF59E0B, 3.8, 180);
+    this.light1.position.set(45, 45, 60);
     this.scene.add(this.light1);
 
-    this.light2 = new THREE.PointLight(0x6366F1, 2.5, 120);
-    this.light2.position.set(-30, -30, 40);
+    this.light2 = new THREE.PointLight(0x6366F1, 3.0, 180);
+    this.light2.position.set(-45, -45, 60);
     this.scene.add(this.light2);
 
     // Start Animation Loop
@@ -247,52 +250,63 @@ class Luxury3DLoader {
     this.mouse.x += (this.mouse.targetX - this.mouse.x) * 0.08;
     this.mouse.y += (this.mouse.targetY - this.mouse.y) * 0.08;
 
-    const warpMultiplier = this.isWarping ? 8.0 : 1.0;
-
-    // Rotate core group
-    if (this.coreGroup) {
-      this.coreGroup.rotation.y += this.rotationSpeed.y * warpMultiplier;
-      this.coreGroup.rotation.x = this.mouse.y * 0.5 + Math.sin(Date.now() * 0.001) * 0.1;
-      this.coreGroup.rotation.z = -this.mouse.x * 0.5;
+    // Handle Cinematic Camera Zoom-Out Animation
+    if (this.isZoomingOut) {
+      // Pull camera backwards into deep space (Zoom Out)
+      this.camera.position.z += (340 - this.camera.position.z) * 0.085;
+      // Accelerate spin rate
+      if (this.coreGroup) {
+        this.coreGroup.rotation.y += 0.075;
+      }
+      if (this.particles) {
+        this.particles.scale.multiplyScalar(1.015);
+      }
+    } else {
+      // Normal rotation with mouse tilt
+      if (this.coreGroup) {
+        this.coreGroup.rotation.y += this.rotationSpeed.y;
+        this.coreGroup.rotation.x = this.mouse.y * 0.45 + Math.sin(Date.now() * 0.001) * 0.08;
+        this.coreGroup.rotation.z = -this.mouse.x * 0.45;
+      }
     }
 
     // Counter-rotate inner quantum core
     if (this.innerMesh) {
-      this.innerMesh.rotation.x -= 0.02 * warpMultiplier;
-      this.innerMesh.rotation.z += 0.025 * warpMultiplier;
+      this.innerMesh.rotation.x -= 0.025;
+      this.innerMesh.rotation.z += 0.03;
     }
 
     // Individual Gyro Ring Rotations
     if (this.ring1) {
-      this.ring1.rotation.z += 0.015 * warpMultiplier;
+      this.ring1.rotation.z += 0.016;
     }
     if (this.ring2) {
-      this.ring2.rotation.x -= 0.018 * warpMultiplier;
-      this.ring2.rotation.y += 0.012 * warpMultiplier;
+      this.ring2.rotation.x -= 0.02;
+      this.ring2.rotation.y += 0.014;
     }
     if (this.ring3) {
-      this.ring3.rotation.z -= 0.01 * warpMultiplier;
-      this.ring3.rotation.x += 0.015 * warpMultiplier;
+      this.ring3.rotation.z -= 0.012;
+      this.ring3.rotation.x += 0.016;
     }
 
     // Orbit satellites
     this.satellites.forEach(sat => {
-      sat.angle += sat.speed * warpMultiplier;
+      sat.angle += sat.speed;
       sat.mesh.position.x = Math.cos(sat.angle) * sat.radius;
       sat.mesh.position.y = Math.sin(sat.angle) * sat.radius;
     });
 
     // Swirl particle field
     if (this.particles) {
-      this.particles.rotation.y += 0.003 * warpMultiplier;
-      this.particles.rotation.x += 0.0015 * warpMultiplier;
+      this.particles.rotation.y += 0.0025;
+      this.particles.rotation.x += 0.0012;
     }
 
     // Dynamic light orbit
     if (this.light1) {
       const time = Date.now() * 0.002;
-      this.light1.position.x = Math.cos(time) * 45;
-      this.light1.position.y = Math.sin(time) * 45;
+      this.light1.position.x = Math.cos(time) * 60;
+      this.light1.position.y = Math.sin(time) * 60;
     }
 
     this.renderer.render(this.scene, this.camera);
@@ -304,7 +318,12 @@ class Luxury3DLoader {
     const ctx = this.canvas.getContext("2d");
     if (!ctx) return;
 
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+
     let angle = 0;
+    let fallbackScale = 1;
+
     const renderFallback = () => {
       if (this.isCompleted) return;
 
@@ -317,31 +336,44 @@ class Luxury3DLoader {
 
       angle += 0.02;
 
-      // Draw 3D-projected rotating ellipses (orbital rings)
+      if (this.isZoomingOut) {
+        fallbackScale *= 0.94; // Zoom out fallback
+      }
+
       ctx.save();
       ctx.translate(cx, cy);
+      ctx.scale(fallbackScale, fallbackScale);
 
       // Ring 1 Gold
       ctx.beginPath();
-      ctx.ellipse(0, 0, 70, 25 * Math.sin(angle), angle, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 110, 40 * Math.sin(angle), angle, 0, Math.PI * 2);
       ctx.strokeStyle = "rgba(245, 158, 11, 0.75)";
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 3;
       ctx.shadowColor = "#F59E0B";
-      ctx.shadowBlur = 15;
+      ctx.shadowBlur = 20;
       ctx.stroke();
 
       // Ring 2 Indigo
       ctx.beginPath();
-      ctx.ellipse(0, 0, 85, 35 * Math.cos(angle * 0.8), -angle * 0.6, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 140, 55 * Math.cos(angle * 0.8), -angle * 0.6, 0, Math.PI * 2);
       ctx.strokeStyle = "rgba(99, 102, 241, 0.8)";
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.5;
       ctx.shadowColor = "#6366F1";
+      ctx.shadowBlur = 20;
+      ctx.stroke();
+
+      // Ring 3 Cyan
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 170, 65 * Math.sin(angle * 0.5), angle * 0.4, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.6)";
+      ctx.lineWidth = 2;
+      ctx.shadowColor = "#38BDF8";
       ctx.shadowBlur = 15;
       ctx.stroke();
 
       // Center Diamond Core
       ctx.beginPath();
-      const r = 24 + Math.sin(angle * 3) * 2;
+      const r = 36 + Math.sin(angle * 3) * 3;
       ctx.moveTo(0, -r);
       ctx.lineTo(r, 0);
       ctx.lineTo(0, r);
@@ -349,7 +381,7 @@ class Luxury3DLoader {
       ctx.closePath();
       ctx.fillStyle = "rgba(245, 158, 11, 0.85)";
       ctx.shadowColor = "#F59E0B";
-      ctx.shadowBlur = 25;
+      ctx.shadowBlur = 30;
       ctx.fill();
 
       // Inner Wireframe Cross
@@ -359,7 +391,7 @@ class Luxury3DLoader {
       ctx.moveTo(-r, 0);
       ctx.lineTo(r, 0);
       ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 2;
       ctx.stroke();
 
       ctx.restore();
@@ -370,7 +402,7 @@ class Luxury3DLoader {
     renderFallback();
   }
 
-  // --- MOUSE & TOUCH TILT LISTENER ---
+  // --- MOUSE, TOUCH & RESIZE EVENT LISTENERS ---
   bindEvents() {
     const handleMove = (clientX, clientY) => {
       const halfW = window.innerWidth / 2;
@@ -388,6 +420,15 @@ class Luxury3DLoader {
         handleMove(e.touches[0].clientX, e.touches[0].clientY);
       }
     }, { passive: true });
+
+    window.addEventListener("resize", () => {
+      if (!this.renderer || !this.camera) return;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      this.camera.aspect = w / h;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(w, h);
+    });
   }
 
   // --- PROGRESS SIMULATION & TELEMETRY ---
@@ -419,30 +460,27 @@ class Luxury3DLoader {
         }
       }
 
-      // Trigger 100% Warp Completion
+      // Trigger 100% Zoom-Out Completion Sequence
       if (this.progress >= 100) {
         clearInterval(interval);
-        this.completeLoading();
+        this.triggerZoomOutExit();
       }
     }, 75);
   }
 
-  // --- 100% WARP PORTAL EXIT SEQUENCE ---
-  completeLoading() {
-    this.isWarping = true;
+  // --- 100% CINEMATIC ZOOM-OUT EXIT SEQUENCE ---
+  triggerZoomOutExit() {
+    // 1. Activate Camera Zoom-Out in Three.js
+    this.isZoomingOut = true;
 
-    // Play subtle luxury audio chime
+    // 2. Play luxury harmonic audio chime
     if (window.soundFX && typeof window.soundFX.playSuccess === "function") {
       try {
         window.soundFX.playSuccess();
       } catch (e) {}
     }
 
-    // Warp expansion animation
-    if (this.canvas) {
-      this.canvas.classList.add("loader-warp-active");
-    }
-
+    // 3. Trigger CSS Cinematic Zoom-Out Animation on Overlay & Dock
     setTimeout(() => {
       if (this.overlay) {
         this.overlay.classList.add("loader-fade-out");
@@ -450,8 +488,8 @@ class Luxury3DLoader {
 
       setTimeout(() => {
         this.destroy();
-      }, 650);
-    }, 380);
+      }, 750);
+    }, 350);
   }
 
   // --- CLEANUP & MEMORY MANAGEMENT ---

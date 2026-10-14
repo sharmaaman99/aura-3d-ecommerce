@@ -19,31 +19,32 @@
 </head>
 <body>
 
-  <!-- ULTRA-MODERN 3D LUXURY SPATIAL LOADING SCREEN -->
+  <!-- ULTRA-MODERN FULL-SCREEN 3D LUXURY SPATIAL LOADING SCREEN -->
   <div id="luxuryLoadingScreen" class="loading-screen-overlay" aria-label="Loading Screen">
     <!-- Ambient 3D Glow Backing -->
     <div class="loader-ambient-glow"></div>
 
-    <div class="loader-hud-card">
-      <!-- Status Chip Header -->
-      <div class="loader-status-chip">
-        <span class="loader-beacon-dot"></span>
-        <span class="loader-chip-text">SPATIAL CORE INITIALIZING</span>
-        <span class="loader-chip-ver">v2.4</span>
-      </div>
+    <!-- Full-Screen 3D WebGL Spatial Canvas -->
+    <canvas id="loader3DCanvas" class="loader-3d-fullscreen-canvas"></canvas>
 
-      <!-- 3D Interactive Spatial Gyroscope Canvas -->
-      <div class="loader-3d-stage">
-        <canvas id="loader3DCanvas" class="loader-3d-canvas" width="280" height="280"></canvas>
-        <div class="loader-ring-glow"></div>
-      </div>
-
-      <!-- Brand & Typography -->
+    <!-- Top Floating HUD Bar -->
+    <header class="loader-top-bar">
       <div class="loader-brand-box">
         <h2 class="loader-brand-title">AURA <span class="loader-brand-tag">3D</span></h2>
         <p class="loader-brand-subtitle">ATELIER HAUTE COMMERCE</p>
       </div>
+      <div class="loader-status-chip">
+        <span class="loader-beacon-dot"></span>
+        <span class="loader-chip-text">SPATIAL CORE ACTIVE</span>
+        <span class="loader-chip-ver">v2.4</span>
+      </div>
+    </header>
 
+    <!-- Center Floating 3D Watermark -->
+    <div class="loader-center-watermark" aria-hidden="true">AURA 3D</div>
+
+    <!-- Bottom Floating Spatial Control Dock -->
+    <div class="loader-hud-dock">
       <!-- Telemetry Stream / Status Text -->
       <div class="loader-telemetry-box">
         <span class="loader-telemetry-icon">›</span>
@@ -68,7 +69,7 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/>
         </svg>
-        <span>Interactive 3D Core • Move cursor to tilt</span>
+        <span>Full-Screen 3D Universe • Move cursor / drag to explore spatial core</span>
       </div>
     </div>
   </div>
