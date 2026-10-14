@@ -1,0 +1,23 @@
+{
+  "name": "aura-3d-ecommerce",
+  "version": "1.0.0",
+  "description": "Ultra-Modern 3D Multi-Category E-Commerce Website with Tilt Physics & Glassmorphism",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve . -l 3000",
+    "serve": "npx serve .",
+    "dev": "python3 -m http.server 3000"
+  },
+  "keywords": [
+    "3d",
+    "ecommerce",
+    "glassmorphism",
+    "web-audio",
+    "streetwear",
+    "luxury-watches",
+    "electronics",
+    "fashion"
+  ],
+  "author": "AURA 3D Atelier",
+  "license": "MIT"
+}
