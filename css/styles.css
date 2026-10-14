@@ -2869,3 +2869,310 @@ dialog::backdrop {
   flex-direction: column;
   gap: 1rem;
 }
+
+
+/* --- LUXURY 3D LOADING SCREEN --- */
+.loading-screen-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg-primary);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s ease;
+}
+
+.loading-screen-overlay.loader-fade-out {
+  opacity: 0;
+  transform: scale(1.04);
+  pointer-events: none;
+}
+
+.loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  max-width: 320px;
+  width: 90%;
+  text-align: center;
+}
+
+.loader-3d-cube {
+  width: 3.5rem;
+  height: 3.5rem;
+  background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-indigo) 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 35px var(--accent-gold-glow);
+  animation: loader-cube-spin 2s ease-in-out infinite;
+}
+
+.loader-inner-dot {
+  width: 1.2rem;
+  height: 1.2rem;
+  background: var(--bg-primary);
+  border-radius: 4px;
+}
+
+@keyframes loader-cube-spin {
+  0% { transform: rotate(0deg) scale(0.9); }
+  50% { transform: rotate(180deg) scale(1.15); }
+  100% { transform: rotate(360deg) scale(0.9); }
+}
+
+.loader-brand-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+}
+
+.loader-status-text {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  height: 1.2rem;
+}
+
+.loader-progress-track {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-surface);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--border-glass);
+}
+
+.loader-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent-gold) 0%, var(--accent-indigo) 100%);
+  border-radius: 999px;
+  transition: width 0.15s ease;
+  box-shadow: 0 0 10px var(--accent-gold-glow);
+}
+
+.loader-percent {
+  font-family: monospace;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--accent-gold);
+}
+
+/* --- TOONHUB 3D CHARACTER FIGURINE HERO CAROUSEL --- */
+.toonhub-outer-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  transition: background-color 650ms cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #F4845F;
+}
+
+.toonhub-viewport {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 640px;
+  overflow: hidden;
+}
+
+/* Grain Overlay using SVG fractalNoise */
+.toonhub-grain-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.4;
+  background-size: 200px 200px;
+  background-repeat: repeat;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+}
+
+/* Giant Ghost Text "3D SHAPE" */
+.toonhub-ghost-text {
+  position: absolute;
+  inset-inline: 0;
+  top: 18%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  user-select: none;
+  z-index: 2;
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(90px, 28vw, 380px);
+  font-weight: 900;
+  color: #FFFFFF;
+  opacity: 1;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+/* Top-Left Brand Label */
+.toonhub-brand-label {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 60;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  opacity: 0.9;
+  letter-spacing: 0.18em;
+}
+
+@media (min-width: 640px) {
+  .toonhub-brand-label {
+    top: 2rem;
+    left: 2rem;
+  }
+}
+
+/* Carousel Track */
+.toonhub-carousel-track {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+}
+
+/* Carousel Item */
+.toonhub-item {
+  position: absolute;
+  aspect-ratio: 0.6 / 1;
+  transition: transform 650ms cubic-bezier(0.4, 0, 0.2, 1),
+              filter 650ms cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 650ms cubic-bezier(0.4, 0, 0.2, 1),
+              left 650ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, filter, opacity;
+}
+
+.toonhub-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+/* Bottom-Left Text & Nav Controls */
+.toonhub-bottom-left {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 1rem;
+  z-index: 60;
+  max-width: 340px;
+  color: #FFFFFF;
+}
+
+@media (min-width: 640px) {
+  .toonhub-bottom-left {
+    bottom: 5rem;
+    left: 6rem;
+  }
+}
+
+.toonhub-title {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.6rem;
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
+  color: #FFFFFF;
+  opacity: 0.95;
+}
+
+.toonhub-desc {
+  font-size: 0.85rem;
+  color: #FFFFFF;
+  opacity: 0.85;
+  line-height: 1.6;
+  margin-bottom: 1.2rem;
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .toonhub-desc {
+    display: block;
+  }
+}
+
+.toonhub-nav-group {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.toonhub-nav-btn {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: transparent;
+  border: 2px solid #FFFFFF;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 150ms ease, background-color 150ms ease;
+}
+
+@media (min-width: 640px) {
+  .toonhub-nav-btn {
+    width: 4rem;
+    height: 4rem;
+  }
+}
+
+.toonhub-nav-btn:hover {
+  transform: scale(1.08);
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Bottom-Right "DISCOVER IT" Link */
+.toonhub-bottom-right {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1rem;
+  z-index: 60;
+}
+
+@media (min-width: 640px) {
+  .toonhub-bottom-right {
+    bottom: 5rem;
+    right: 3rem;
+  }
+}
+
+.toonhub-discover-link {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(20px, 4vw, 56px);
+  font-weight: 400;
+  color: #FFFFFF;
+  opacity: 0.95;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.toonhub-discover-link:hover {
+  opacity: 1;
+  transform: translateX(4px);
+}

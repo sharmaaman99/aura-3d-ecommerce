@@ -1,20 +1,35 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AURA 3D | Ultra-Modern Multi-Category E-Commerce Atelier</title>
   <meta name="description" content="Experience next-generation 3D shopping for Streetwear, Luxury Watches, High-End Electronics, and Fashion Accessories in INR (₹).">
 
-  <!-- Google Fonts: Plus Jakarta Sans & Syne -->
+  <!-- Google Fonts: Anton, Inter, Plus Jakarta Sans & Syne -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
 
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+
+  <!-- LUXURY 3D LOADING SCREEN -->
+  <div id="luxuryLoadingScreen" class="loading-screen-overlay" aria-label="Loading Screen">
+    <div class="loader-content">
+      <div class="loader-3d-cube">
+        <div class="loader-inner-dot"></div>
+      </div>
+      <div class="loader-brand-title">AURA<span class="logo-tag">3D</span></div>
+      <div class="loader-status-text" id="loaderStatusText">Architecting 3D Spatial Canvas...</div>
+      <div class="loader-progress-track">
+        <div class="loader-progress-bar" id="loaderProgressBar"></div>
+      </div>
+      <div class="loader-percent" id="loaderPercent">0%</div>
+    </div>
+  </div>
 
   <!-- FULL-SCREEN 3D AMBIENT BACKGROUND CANVAS -->
   <canvas id="bg3DCanvas" class="bg-3d-canvas"></canvas>
@@ -53,6 +68,7 @@
       <!-- Desktop Nav Links -->
       <nav aria-label="Main Navigation">
         <ul class="nav-links">
+          <li><a href="#toonhubSection" class="nav-link" style="color: var(--accent-gold); font-weight: 800;">TOONHUB 3D</a></li>
           <li><a href="#catalog" class="nav-link active" onclick="window.luxeApp.currentCategory='all'; document.querySelectorAll('.category-tab-btn')[0].click();">Shop All</a></li>
           <li><a href="#catalog" class="nav-link" onclick="document.querySelector('[data-category=clothing]').click();">Clothing</a></li>
           <li><a href="#catalog" class="nav-link" onclick="document.querySelector('[data-category=watches]').click();">Watches</a></li>
@@ -79,7 +95,7 @@
 
         <!-- Dark / Light Mode Toggle -->
         <button id="themeToggleBtn" class="action-icon-btn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
-          <svg id="sunIcon" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg id="sunIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="5"/>
             <line x1="12" y1="1" x2="12" y2="3"/>
             <line x1="12" y1="21" x2="12" y2="23"/>
@@ -90,7 +106,7 @@
             <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
           </svg>
-          <svg id="moonIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg id="moonIcon" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
           </svg>
         </button>
@@ -142,6 +158,7 @@
       <button id="closeMobileNavBtn" class="close-drawer-btn">✕</button>
     </div>
     <ul style="list-style: none; display: flex; flex-direction: column; gap: 1.5rem; font-size: 1.2rem; font-weight: 700;">
+      <li><a href="#toonhubSection" onclick="document.getElementById('mobileNavDrawer').classList.add('hidden');" style="color: var(--accent-gold);">TOONHUB 3D Carousel</a></li>
       <li><a href="#catalog" onclick="document.getElementById('mobileNavDrawer').classList.add('hidden'); document.querySelectorAll('.category-tab-btn')[0].click();">Shop All</a></li>
       <li><a href="#catalog" onclick="document.getElementById('mobileNavDrawer').classList.add('hidden'); document.querySelector('[data-category=clothing]').click();">Clothing</a></li>
       <li><a href="#catalog" onclick="document.getElementById('mobileNavDrawer').classList.add('hidden'); document.querySelector('[data-category=watches]').click();">Watches</a></li>
@@ -151,6 +168,53 @@
   </div>
 
   <main>
+    <!-- TOONHUB 3D CHARACTER FIGURINE HERO CAROUSEL -->
+    <section class="toonhub-outer-container" id="toonhubSection" aria-label="TOONHUB Figurines">
+      <div class="toonhub-viewport">
+        <!-- Grain Overlay -->
+        <div class="toonhub-grain-overlay"></div>
+
+        <!-- Giant Ghost Text "3D SHAPE" -->
+        <div class="toonhub-ghost-text">3D SHAPE</div>
+
+        <!-- Top-Left Brand Label -->
+        <div class="toonhub-brand-label">TOONHUB</div>
+
+        <!-- Carousel Track with 4 items -->
+        <div class="toonhub-carousel-track" id="toonhubTrack"></div>
+
+        <!-- Bottom-Left Text & Nav Controls -->
+        <div class="toonhub-bottom-left">
+          <p class="toonhub-title">TOONHUB FIGURINES</p>
+          <p class="toonhub-desc">
+            The artwork is stunning, shipped fully prepared. The finish is a vision, the 3D craft is flawless. Many thanks! Wishing you the win. Order now.
+          </p>
+          <div class="toonhub-nav-group">
+            <button id="toonhubPrevBtn" class="toonhub-nav-btn" aria-label="Previous Figurine">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
+              </svg>
+            </button>
+            <button id="toonhubNextBtn" class="toonhub-nav-btn" aria-label="Next Figurine">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bottom-Right "DISCOVER IT" Link -->
+        <div class="toonhub-bottom-right">
+          <a href="#catalog" class="toonhub-discover-link">
+            <span>DISCOVER IT</span>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
     <!-- INTERACTIVE 3D HERO SECTION -->
     <section class="hero-section" id="heroSection">
       <div class="container hero-grid">
@@ -967,6 +1031,7 @@
   <script src="js/three-bg.js"></script>
   <script src="js/tilt3d.js"></script>
   <script src="js/audio.js"></script>
+  <script src="js/toonhub.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

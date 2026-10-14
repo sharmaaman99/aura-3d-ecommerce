@@ -31,6 +31,7 @@ class LuxeStoreApp {
 
   setup() {
     this.initTheme();
+    this.initLoadingScreen();
     this.bindEvents();
     this.renderProducts();
     this.updateCartUI();
@@ -38,24 +39,52 @@ class LuxeStoreApp {
     this.startCountdownTimer();
   }
 
-  // --- THEME MANAGEMENT (Dark / Light) ---
+  // --- THEME MANAGEMENT (System-adaptive, Light by default) ---
   initTheme() {
-    const savedTheme = localStorage.getItem("luxe_theme") || "dark";
-    this.setTheme(savedTheme);
+    // 1. Check if user manually saved a theme
+    const manualTheme = localStorage.getItem("luxe_theme_manual");
+    
+    // 2. Check system preference
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // 3. Normally defaults to LIGHT, unless user chose manual or system prefers dark
+    let initialTheme = "light";
+    if (manualTheme) {
+      initialTheme = manualTheme;
+    } else if (prefersDark) {
+      initialTheme = "dark";
+    } else {
+      initialTheme = "light"; // Default is Light theme
+    }
+
+    this.setTheme(initialTheme, false);
+
+    // Listen to OS system theme changes
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        // If user hasn't explicitly chosen a manual preference, follow system
+        if (!localStorage.getItem("luxe_theme_manual")) {
+          this.setTheme(e.matches ? "dark" : "light", false);
+        }
+      });
+    }
 
     const themeToggleBtn = document.getElementById("themeToggleBtn");
     if (themeToggleBtn) {
       themeToggleBtn.addEventListener("click", () => {
-        const current = document.documentElement.getAttribute("data-theme") || "dark";
+        const current = document.documentElement.getAttribute("data-theme") || "light";
         const newTheme = current === "dark" ? "light" : "dark";
-        this.setTheme(newTheme);
+        this.setTheme(newTheme, true); // true = user explicitly clicked
         window.soundFX?.playClick();
       });
     }
   }
 
-  setTheme(theme) {
+  setTheme(theme, isManual = false) {
     document.documentElement.setAttribute("data-theme", theme);
+    if (isManual) {
+      localStorage.setItem("luxe_theme_manual", theme);
+    }
     localStorage.setItem("luxe_theme", theme);
 
     const sunIcon = document.getElementById("sunIcon");
@@ -69,6 +98,45 @@ class LuxeStoreApp {
         moonIcon.classList.remove("hidden");
       }
     }
+  }
+
+  // --- LUXURY 3D LOADING SCREEN CONTROLLER ---
+  initLoadingScreen() {
+    const loader = document.getElementById("luxuryLoadingScreen");
+    const bar = document.getElementById("loaderProgressBar");
+    const percent = document.getElementById("loaderPercent");
+    const status = document.getElementById("loaderStatusText");
+    if (!loader) return;
+
+    let progress = 0;
+    const stages = [
+      "Initializing 3D Spatial Canvas...",
+      "Calibrating Perspective Physics...",
+      "Preloading 3D TOONHUB Figurines...",
+      "Polishing Specular Materials...",
+      "Atelier Ready."
+    ];
+
+    const timer = setInterval(() => {
+      progress += Math.floor(Math.random() * 20) + 12;
+      if (progress > 100) progress = 100;
+
+      if (bar) bar.style.width = `${progress}%`;
+      if (percent) percent.textContent = `${progress}%`;
+
+      const stageIdx = Math.min(stages.length - 1, Math.floor((progress / 100) * stages.length));
+      if (status) status.textContent = stages[stageIdx];
+
+      if (progress >= 100) {
+        clearInterval(timer);
+        setTimeout(() => {
+          loader.classList.add("loader-fade-out");
+          setTimeout(() => {
+            loader.style.display = "none";
+          }, 600);
+        }, 300);
+      }
+    }, 70);
   }
 
   // --- EVENT LISTENERS ---
