@@ -347,28 +347,22 @@ class Luxury3DLoader {
       // Ring 1 Gold
       ctx.beginPath();
       ctx.ellipse(0, 0, 110, 40 * Math.sin(angle), angle, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(245, 158, 11, 0.75)";
-      ctx.lineWidth = 3;
-      ctx.shadowColor = "#F59E0B";
-      ctx.shadowBlur = 20;
+      ctx.strokeStyle = "rgba(245, 158, 11, 0.9)";
+      ctx.lineWidth = 2.5;
       ctx.stroke();
 
       // Ring 2 Indigo
       ctx.beginPath();
       ctx.ellipse(0, 0, 140, 55 * Math.cos(angle * 0.8), -angle * 0.6, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(99, 102, 241, 0.8)";
-      ctx.lineWidth = 2.5;
-      ctx.shadowColor = "#6366F1";
-      ctx.shadowBlur = 20;
+      ctx.strokeStyle = "rgba(99, 102, 241, 0.9)";
+      ctx.lineWidth = 2;
       ctx.stroke();
 
       // Ring 3 Cyan
       ctx.beginPath();
       ctx.ellipse(0, 0, 170, 65 * Math.sin(angle * 0.5), angle * 0.4, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(56, 189, 248, 0.6)";
-      ctx.lineWidth = 2;
-      ctx.shadowColor = "#38BDF8";
-      ctx.shadowBlur = 15;
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.8)";
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
       // Center Diamond Core
@@ -379,9 +373,7 @@ class Luxury3DLoader {
       ctx.lineTo(0, r);
       ctx.lineTo(-r, 0);
       ctx.closePath();
-      ctx.fillStyle = "rgba(245, 158, 11, 0.85)";
-      ctx.shadowColor = "#F59E0B";
-      ctx.shadowBlur = 30;
+      ctx.fillStyle = "rgba(245, 158, 11, 0.95)";
       ctx.fill();
 
       // Inner Wireframe Cross
@@ -431,17 +423,23 @@ class Luxury3DLoader {
     });
   }
 
-  // --- PROGRESS SIMULATION & TELEMETRY ---
+  // --- PROGRESS SIMULATION & TELEMETRY (EXACTLY 3.0 SECONDS DURATION) ---
   startProgressSimulation() {
-    const interval = setInterval(() => {
-      if (this.isCompleted) {
-        clearInterval(interval);
-        return;
-      }
+    const totalDuration = 3000; // 3.0 seconds duration
+    const startTime = performance.now();
 
-      // Realistic non-linear progress curve
-      const step = Math.floor(Math.random() * 12) + 8;
-      this.progress = Math.min(100, this.progress + step);
+    const tick = (now) => {
+      if (this.isCompleted) return;
+
+      const elapsed = now - startTime;
+      const progressRatio = Math.min(1, elapsed / totalDuration);
+
+      // Smooth luxury cubic curve
+      const eased = progressRatio < 0.5
+        ? 4 * progressRatio * progressRatio * progressRatio
+        : 1 - Math.pow(-2 * progressRatio + 2, 3) / 2;
+
+      this.progress = Math.min(100, Math.round(eased * 100));
 
       // Update UI elements
       if (this.bar) this.bar.style.width = `${this.progress}%`;
@@ -460,12 +458,19 @@ class Luxury3DLoader {
         }
       }
 
-      // Trigger 100% Zoom-Out Completion Sequence
-      if (this.progress >= 100) {
-        clearInterval(interval);
+      if (elapsed < totalDuration) {
+        requestAnimationFrame(tick);
+      } else {
+        this.progress = 100;
+        if (this.bar) this.bar.style.width = "100%";
+        if (this.percent) this.percent.textContent = "100%";
+        if (this.statusText) this.statusText.textContent = "Atelier Initialized • Welcome to AURA 3D";
+        if (this.stageName) this.stageName.textContent = "READY";
         this.triggerZoomOutExit();
       }
-    }, 75);
+    };
+
+    requestAnimationFrame(tick);
   }
 
   // --- 100% CINEMATIC ZOOM-OUT EXIT SEQUENCE ---
@@ -489,7 +494,7 @@ class Luxury3DLoader {
       setTimeout(() => {
         this.destroy();
       }, 750);
-    }, 350);
+    }, 280);
   }
 
   // --- CLEANUP & MEMORY MANAGEMENT ---
